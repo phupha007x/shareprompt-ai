@@ -70,20 +70,27 @@
             background-color: #3b82f6 !important;
         }
         
-        /* Hide scrollbar for cleaner look in prompt view */
-        .custom-scrollbar::-webkit-scrollbar {
+        /* Hide scrollbars for cleaner look */
+        .custom-scrollbar::-webkit-scrollbar, .hide-scroll::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track, .hide-scroll::-webkit-scrollbar-track {
             background: #f1f1f1; 
             border-radius: 4px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb, .hide-scroll::-webkit-scrollbar-thumb {
             background: #cbd5e1; 
             border-radius: 4px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover, .hide-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
+        }
+
+        .cat-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
         }
     </style>
 </head>
@@ -97,58 +104,119 @@
 
     <!-- Header -->
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-tr from-blue-500 to-cyan-400 text-white p-2 rounded-xl shadow-md">
-                    <span class="material-icons">auto_awesome</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-tr from-blue-500 to-cyan-400 text-white p-2 rounded-xl shadow-md flex-shrink-0">
+                        <span class="material-icons">auto_awesome</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600 leading-tight">
+                            SharePrompt
+                        </h1>
+                        <p class="text-[11px] md:text-xs text-gray-500 font-medium truncate">หลักสูตรที่ 11 AI ช่วยทำวิจัยทางการศึกษา</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
-                        SharePrompt
-                    </h1>
-                    <p class="text-xs md:text-sm text-gray-500 font-medium">หลักสูตรที่ 11 AI ช่วยทำวิจัยทางการศึกษา</p>
-                </div>
-            </div>
-
-            <div class="flex-1 w-full md:max-w-md relative">
-                <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
-                <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อ หรือรายละเอียด..." 
-                       class="w-full pl-10 pr-4 py-2.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-inner bg-gray-50">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button id="addPromptBtn" onclick="openAddModal()" class="hidden bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white px-4 py-2 rounded-full font-medium transition-transform transform hover:scale-105 shadow-md flex items-center gap-1">
-                    <span class="material-icons text-sm">add</span> เพิ่ม Prompt
+                
+                <!-- Mobile Admin Login Icon -->
+                <button onclick="handleLoginFlow()" class="lg:hidden text-blue-600 bg-blue-50 p-2 rounded-full border border-blue-100">
+                    <span class="material-icons text-[20px]" id="loginIconMobile">login</span>
                 </button>
-                <button id="loginBtn" onclick="handleLoginFlow()" class="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-4 py-2 rounded-full font-medium transition-colors shadow-sm flex items-center gap-1">
-                    <span class="material-icons text-sm" id="loginIcon">login</span>
+            </div>
+
+            <!-- Search and Sort Controls -->
+            <div class="flex-1 w-full flex flex-col sm:flex-row gap-3">
+                <div class="flex-1 relative">
+                    <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                    <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อ รายละเอียด หรือหมวดหมู่..." 
+                           class="w-full pl-10 pr-4 py-2.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-inner bg-gray-50 text-sm">
+                </div>
+                
+                <!-- Sort Dropdown -->
+                <div class="relative flex-shrink-0">
+                    <select id="sortSelect" onchange="handleSortChange(this.value)" class="w-full sm:w-auto appearance-none pl-4 pr-10 py-2.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm cursor-pointer">
+                        <option value="newest">ใหม่ล่าสุด</option>
+                        <option value="oldest">เก่าสุด</option>
+                        <option value="popular">ยอดคัดลอกสูงสุด</option>
+                    </select>
+                    <span class="material-icons absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none text-sm">expand_more</span>
+                </div>
+            </div>
+
+            <!-- Desktop Action Buttons -->
+            <div class="hidden lg:flex items-center gap-3">
+                <button id="addPromptBtn" onclick="openAddModal()" class="hidden bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white px-4 py-2 rounded-full font-medium transition-transform transform hover:scale-105 shadow-md flex items-center gap-1 text-sm">
+                    <span class="material-icons text-[18px]">add</span> เพิ่ม Prompt
+                </button>
+                <button id="loginBtn" onclick="handleLoginFlow()" class="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-4 py-2 rounded-full font-medium transition-colors shadow-sm flex items-center gap-1 text-sm whitespace-nowrap">
+                    <span class="material-icons text-[18px]" id="loginIcon">login</span>
                     <span id="loginText">ผู้ดูแลระบบ</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100">
+            <div id="categoryFilters" class="flex gap-2 overflow-x-auto py-3 hide-scroll">
+                <button onclick="setCategoryFilter('ทั้งหมด', this)" class="cat-btn active flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">ทั้งหมด</button>
+                <button onclick="setCategoryFilter('การหาหัวข้อและโครงร่างวิจัย', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">การหาหัวข้อและโครงร่างวิจัย</button>
+                <button onclick="setCategoryFilter('การทบทวนวรรณกรรม', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">การทบทวนวรรณกรรม</button>
+                <button onclick="setCategoryFilter('การสร้างเครื่องมือและแบบสอบถาม', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">การสร้างเครื่องมือและแบบสอบถาม</button>
+                <button onclick="setCategoryFilter('การวิเคราะห์ข้อมูลและสถิติ', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">การวิเคราะห์ข้อมูลและสถิติ</button>
+                <button onclick="setCategoryFilter('การเขียนรายงานและสรุปผล', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">การเขียนรายงานและสรุปผล</button>
+                <button onclick="setCategoryFilter('ทั่วไป', this)" class="cat-btn flex-shrink-0 px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium transition-colors hover:bg-gray-50">ทั่วไป</button>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         
-        <!-- Optional: Chart Section (Visible to Admin or default hidden) -->
+        <!-- Admin Dashboard Section -->
         <div id="statsSection" class="hidden mb-8 glass-card rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
-                <span class="material-icons text-blue-500">pie_chart</span> สัดส่วน Prompt ตามหมวดหมู่งานวิจัย
-            </h2>
-            <div class="h-48 w-full max-w-md mx-auto relative">
-                <canvas id="promptChart"></canvas>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Doughnut Chart (Categories) -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                        <span class="material-icons text-blue-500">pie_chart</span> สัดส่วนตามหมวดหมู่
+                    </h2>
+                    <div class="h-56 w-full max-w-sm mx-auto relative">
+                        <canvas id="promptChart"></canvas>
+                    </div>
+                </div>
+                <!-- Bar Chart (Top 5 Popular) -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                        <span class="material-icons text-emerald-500">trending_up</span> Top 5 ยอดนิยม (คัดลอก)
+                    </h2>
+                    <div class="h-56 w-full relative">
+                        <canvas id="topPromptChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="noDataMessage" class="hidden text-center py-20">
-            <span class="material-icons text-6xl text-gray-300 mb-4 block">search_off</span>
-            <h3 class="text-xl font-medium text-gray-500">ไม่พบ Prompt ที่ค้นหา</h3>
-            <p class="text-gray-400 mt-2">ลองใช้คำค้นหาอื่นดูอีกครั้ง</p>
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="hidden text-center py-16">
+            <div class="bg-gray-100 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-icons text-4xl text-gray-400">search_off</span>
+            </div>
+            <h3 class="text-xl font-medium text-gray-700">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</h3>
+            <p class="text-gray-500 mt-2 text-sm">ลองปรับการค้นหา หรือเปลี่ยนหมวดหมู่ดูอีกครั้ง</p>
         </div>
 
+        <!-- Prompt Grid -->
         <div id="promptGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Cards will be dynamically injected here -->
+        </div>
+
+        <!-- Load More Button -->
+        <div id="loadMoreContainer" class="hidden mt-10 text-center">
+            <button onclick="loadMore()" class="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-6 py-2.5 rounded-full font-medium transition-colors shadow-sm inline-flex items-center gap-2">
+                <span class="material-icons text-[18px]">expand_more</span> โหลดเพิ่มเติม
+            </button>
         </div>
     </main>
 
@@ -215,40 +283,59 @@
         
         // สถานะของระบบ
         let promptsData = [];
+        let filteredData = []; // เก็บข้อมูลหลังผ่านการกรอง/เรียง เพื่อทำ Pagination
         let isAdmin = false;
-        let myChart = null;
+        
+        // สถานะ UI
+        let currentFilterCategory = 'ทั้งหมด';
+        let currentSort = 'newest';
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 6; // แสดงทีละ 6 รายการ
 
+        let categoryChart = null;
+        let topChart = null;
+
+        // ข้อมูลตัวอย่าง
         const sampleData = [
-            { id: '1', title: 'ออกแบบสอบถามงานวิจัย', category: 'การสร้างเครื่องมือและแบบสอบถาม', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026' },
-            { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', category: 'การทบทวนวรรณกรรม', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026' },
-            { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', category: 'การวิเคราะห์ข้อมูลและสถิติ', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026' }
+            { id: '1', title: 'ออกแบบสอบถามงานวิจัย', category: 'การสร้างเครื่องมือและแบบสอบถาม', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026', copies: 45 },
+            { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', category: 'การทบทวนวรรณกรรม', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026', copies: 120 },
+            { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', category: 'การวิเคราะห์ข้อมูลและสถิติ', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026', copies: 12 },
+            { id: '4', title: 'โครงร่างงานวิจัยเบื้องต้น', category: 'การหาหัวข้อและโครงร่างวิจัย', description: 'ร่างหัวข้อและวัตถุประสงค์', promptText: 'ช่วยตั้งชื่อเรื่องงานวิจัยและเขียนวัตถุประสงค์ 3 ข้อ สำหรับเรื่องเกี่ยวกับการบูรณาการเทคโนโลยีกับวิชาคณิตศาสตร์', date: '08/04/2026', copies: 85 },
+            { id: '5', title: 'ตรวจสอบไวยากรณ์บทคัดย่อ', category: 'การเขียนรายงานและสรุปผล', description: 'แปลและตรวจแกรมม่าภาษาอังกฤษ', promptText: 'ช่วยตรวจสอบและแก้ไขไวยากรณ์ภาษาอังกฤษของบทคัดย่อ (Abstract) ต่อไปนี้ให้ถูกต้องตามหลักวิชาการ:\n\n[วางเนื้อหา]', date: '05/04/2026', copies: 210 },
+            { id: '6', title: 'ช่วยเลือกสถิติที่เหมาะสม', category: 'การวิเคราะห์ข้อมูลและสถิติ', description: 'แนะนำการใช้สถิติทดสอบสมมติฐาน', promptText: 'ฉันมีตัวแปรอิสระคือ วิธีสอน 2 แบบ และตัวแปรตามคือ คะแนนสอบ ฉันควรใช้สถิติทดสอบอะไร (เช่น t-test, ANOVA) พร้อมอธิบายเหตุผล', date: '01/04/2026', copies: 56 }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('searchInput').addEventListener('input', (e) => renderCards(e.target.value));
+            document.getElementById('searchInput').addEventListener('input', () => {
+                currentPage = 1;
+                applyFiltersAndRender();
+            });
             fetchData();
         });
 
         // ==========================================
-        // การเชื่อมต่อฐานข้อมูล
+        // การดึงและประมวลผลข้อมูล (Data Management)
         // ==========================================
         
         async function fetchData() {
             if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
                 promptsData = sampleData;
-                renderCards();
-                updateChart();
+                applyFiltersAndRender();
+                updateCharts();
                 return;
             }
 
             showLoading();
             try {
-                // ดึงข้อมูลใช้ GET (Fetch ธรรมดา)
                 const response = await fetch(GAS_WEB_APP_URL + '?action=read');
                 const result = await response.json();
                 
                 if (result && result.status === 'success') {
-                    promptsData = result.data.reverse(); 
+                    // แปลง copies เป็นตัวเลข (ถ้าไม่มีให้เป็น 0)
+                    promptsData = result.data.map(item => ({
+                        ...item,
+                        copies: parseInt(item.copies) || 0
+                    })).reverse(); // ของใหม่ขึ้นก่อน
                 } else {
                     throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
                 }
@@ -257,84 +344,127 @@
                 promptsData = sampleData; 
             } finally {
                 hideLoading();
-                renderCards();
-                updateChart();
+                applyFiltersAndRender();
+                updateCharts();
             }
         }
 
         async function sendDataToGAS(action, dataObj = {}) {
-            showLoading();
+            // ไม่ต้องโชว์ Loading ถ้านับยอด Copy (ให้มันทำงานอยู่ Background)
+            if (action !== 'increment_copy') showLoading();
+            
             try {
-                // ส่งข้อมูลใช้ POST ผ่าน URLSearchParams 
                 const formData = new URLSearchParams();
                 formData.append('action', action);
                 
                 if (action === 'delete') {
                     formData.append('id', dataObj.id);
+                } else if (action === 'increment_copy') {
+                    formData.append('id', dataObj.id);
                 } else {
                     formData.append('data', JSON.stringify(dataObj));
                 }
 
-                // การใช้ mode: 'no-cors' จะช่วยแก้ปัญหา Error แดงในเบราว์เซอร์
-                // แม้จะไม่สามารถอ่านคำตอบที่เป็น JSON ได้ แต่ข้อมูลจะถูกส่งเข้า Google Sheet แน่นอน
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: formData,
-                    mode: 'no-cors'
+                    mode: 'no-cors' // แก้ปัญหา CORS Error
                 });
                 
-                // หน่วงเวลาเล็กน้อยเพื่อให้ Google Sheet บันทึกข้อมูลลงเซลล์ให้เสร็จสิ้น
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // โหลดข้อมูลล่าสุดมาแสดงผลใหม่
-                await fetchData(); 
-                
-                // แสดงสถานะสำเร็จ
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ',
-                    text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
+                if (action !== 'increment_copy') {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await fetchData(); 
+                    Swal.fire({
+                        icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                        timer: 1500, showConfirmButton: false
+                    });
+                }
             } catch (error) {
                 console.warn('Error sending data:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Deploy ของคุณ'
-                });
+                if (action !== 'increment_copy') {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถส่งข้อมูลได้' });
+                }
             } finally {
-                hideLoading(); 
+                if (action !== 'increment_copy') hideLoading(); 
             }
         }
 
         // ==========================================
-        // การแสดงผล (UI Rendering)
+        // การกรอง เรียงลำดับ และแบ่งหน้า (Filters, Sort, Pagination)
         // ==========================================
 
-        function renderCards(filterText = '') {
+        function setCategoryFilter(category, btnElement) {
+            currentFilterCategory = category;
+            currentPage = 1; // กลับไปหน้าแรกเสมอเมื่อเปลี่ยนหมวด
+
+            // อัปเดต UI ปุ่ม
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+
+            applyFiltersAndRender();
+        }
+
+        function handleSortChange(value) {
+            currentSort = value;
+            currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function applyFiltersAndRender() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            // 1. กรองข้อมูล (ค้นหา + หมวดหมู่)
+            filteredData = promptsData.filter(p => {
+                const matchSearch = p.title.toLowerCase().includes(searchText) || 
+                                    p.description.toLowerCase().includes(searchText);
+                const matchCategory = currentFilterCategory === 'ทั้งหมด' || p.category === currentFilterCategory;
+                return matchSearch && matchCategory;
+            });
+
+            // 2. เรียงลำดับ
+            if (currentSort === 'newest') {
+                // ปกติ fetchData() ดึงมาเรียงใหม่สุดอยู่แล้ว (reverse) 
+                // แต่ถ้าอยากชัวร์ อาจจะใช้วิธีจัดเรียงตาม ID หรือ Date 
+            } else if (currentSort === 'oldest') {
+                filteredData = [...filteredData].reverse();
+            } else if (currentSort === 'popular') {
+                filteredData.sort((a, b) => b.copies - a.copies);
+            }
+
+            renderGrid();
+        }
+
+        function loadMore() {
+            currentPage++;
+            renderGrid();
+        }
+
+        // ==========================================
+        // การวาด UI (Rendering)
+        // ==========================================
+
+        function renderGrid() {
             const grid = document.getElementById('promptGrid');
             const noData = document.getElementById('noDataMessage');
-            grid.innerHTML = '';
+            const loadMoreBtn = document.getElementById('loadMoreContainer');
             
-            const lowerFilter = filterText.toLowerCase();
-            const filteredData = promptsData.filter(p => 
-                p.title.toLowerCase().includes(lowerFilter) || 
-                p.description.toLowerCase().includes(lowerFilter) ||
-                (p.category && p.category.toLowerCase().includes(lowerFilter)) // ค้นหาจากหมวดหมู่ได้ด้วย
-            );
+            // เคลียร์หน้าจอ
+            grid.innerHTML = '';
 
             if (filteredData.length === 0) {
                 noData.classList.remove('hidden');
+                loadMoreBtn.classList.add('hidden');
+                return;
             } else {
                 noData.classList.add('hidden');
             }
 
-            filteredData.forEach(prompt => {
+            // คำนวณข้อมูลที่จะนำมาแสดงในหน้านี้
+            const itemsToShow = filteredData.slice(0, currentPage * ITEMS_PER_PAGE);
+
+            itemsToShow.forEach(prompt => {
                 const card = document.createElement('div');
-                card.className = 'glass-card rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative group';
+                card.className = 'glass-card rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative group bg-white';
                 
                 let adminControls = '';
                 if (isAdmin) {
@@ -356,15 +486,18 @@
                     ${adminControls}
                     <div class="flex items-center gap-3 mb-3">
                         <div class="bg-blue-100 text-blue-600 p-2 rounded-lg flex-shrink-0">
-                            <span class="material-icons">chat</span>
+                            <span class="material-icons text-[20px]">chat</span>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-800 line-clamp-1 pr-12">${prompt.title}</h2>
+                        <h2 class="text-lg font-bold text-gray-800 line-clamp-1 pr-12">${prompt.title}</h2>
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-2 mb-3">
                         ${catBadge}
                         <p class="text-xs text-gray-400 flex items-center gap-1">
-                            <span class="material-icons" style="font-size: 14px;">calendar_today</span> ${prompt.date || '-'}
+                            <span class="material-icons text-[14px]">calendar_today</span> ${prompt.date || '-'}
+                        </p>
+                        <p class="text-xs text-blue-500 font-medium flex items-center gap-1 ml-auto bg-blue-50 px-2 py-0.5 rounded-md">
+                            <span class="material-icons text-[14px]">content_copy</span> ${prompt.copies || 0}
                         </p>
                     </div>
 
@@ -374,12 +507,19 @@
                         <p class="text-sm font-mono text-gray-500 whitespace-pre-wrap">${prompt.promptText}</p>
                     </div>
 
-                    <button onclick="viewPrompt('${prompt.id}')" class="w-full mt-auto bg-white border-2 border-blue-100 hover:border-blue-400 hover:bg-blue-50 text-blue-600 font-medium py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <button onclick="viewPrompt('${prompt.id}')" class="w-full mt-auto bg-white border-2 border-blue-100 hover:border-blue-400 hover:bg-blue-50 text-blue-600 font-medium py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm">
                         <span class="material-icons text-[18px]">visibility</span> ดูรายละเอียด / คัดลอก
                     </button>
                 `;
                 grid.appendChild(card);
             });
+
+            // ตรวจสอบว่าต้องโชว์ปุ่ม Load More ไหม
+            if (filteredData.length > currentPage * ITEMS_PER_PAGE) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
 
             if (window.MathJax) {
                 MathJax.typesetPromise();
@@ -387,7 +527,7 @@
         }
 
         // ==========================================
-        // Modal & Interactions
+        // Modal & Copy Interactions
         // ==========================================
 
         function viewPrompt(id) {
@@ -417,57 +557,68 @@
                     if (window.MathJax) MathJax.typesetPromise([Swal.getHtmlContainer()]);
                 }
             }).then((result) => {
-                if (result.isConfirmed) copyToClipboard(prompt.promptText);
+                if (result.isConfirmed) copyToClipboard(prompt.id, prompt.promptText);
             });
         }
 
-        function copyToClipboard(text) {
+        function copyToClipboard(id, text) {
+            const successCallback = () => {
+                showCopySuccess();
+                incrementCopyCount(id); // เรียกฟังก์ชันเพิ่มยอด
+            };
+
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => showCopySuccess());
+                navigator.clipboard.writeText(text).then(successCallback);
             } else {
                 let textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
-                textArea.style.top = "-999999px";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showCopySuccess();
+                    successCallback();
                 } catch (err) {
-                    console.error('Fallback: Oops, unable to copy', err);
+                    console.error('Fallback Copy Error', err);
                 }
                 textArea.remove();
             }
         }
 
+        function incrementCopyCount(id) {
+            const promptIndex = promptsData.findIndex(p => p.id === id);
+            if(promptIndex > -1) {
+                // อัปเดตในหน่วยความจำทันที
+                promptsData[promptIndex].copies = (promptsData[promptIndex].copies || 0) + 1;
+                
+                // รีเฟรชหน้าจอเพื่อโชว์ยอดใหม่
+                applyFiltersAndRender(); 
+                
+                // ถ้าระบบเปิดแอดมินอยู่ ให้อัปเดตกราฟด้วย
+                if(isAdmin) updateCharts();
+                
+                // ส่งค่าให้ Google Apps Script บันทึกหลังบ้าน
+                sendDataToGAS('increment_copy', { id: id });
+            }
+        }
+
         function showCopySuccess() {
             Swal.fire({
-                icon: 'success',
-                title: 'คัดลอกสำเร็จ!',
-                text: 'คุณสามารถนำไปวางใน AI ได้เลย',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
+                icon: 'success', title: 'คัดลอกสำเร็จ!', text: 'คุณสามารถนำไปวางใน AI ได้เลย',
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
             });
         }
 
         // ==========================================
-        // ระบบจัดการแอดมิน (Admin & CRUD)
+        // ระบบจัดการแอดมิน (Admin & Charts)
         // ==========================================
 
         function handleLoginFlow() {
             if (isAdmin) {
                 Swal.fire({
-                    title: 'ออกจากระบบ?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'ใช่, ออกจากระบบ',
-                    cancelButtonText: 'ยกเลิก'
+                    title: 'ออกจากระบบ?', icon: 'question', showCancelButton: true,
+                    confirmButtonText: 'ใช่, ออกจากระบบ', cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         isAdmin = false;
@@ -482,15 +633,9 @@
                         <input id="swal-input1" class="swal2-input" placeholder="Username" autocomplete="off">
                         <input id="swal-input2" class="swal2-input" type="password" placeholder="Password">
                     `,
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonText: 'เข้าสู่ระบบ',
-                    cancelButtonText: 'ยกเลิก',
+                    focusConfirm: false, showCancelButton: true, confirmButtonText: 'เข้าสู่ระบบ', cancelButtonText: 'ยกเลิก',
                     preConfirm: () => {
-                        return {
-                            user: document.getElementById('swal-input1').value,
-                            pass: document.getElementById('swal-input2').value
-                        }
+                        return { user: document.getElementById('swal-input1').value, pass: document.getElementById('swal-input2').value }
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -509,6 +654,7 @@
         function updateAdminUI() {
             const addBtn = document.getElementById('addPromptBtn');
             const loginIcon = document.getElementById('loginIcon');
+            const loginIconMob = document.getElementById('loginIconMobile');
             const loginText = document.getElementById('loginText');
             const statsSec = document.getElementById('statsSection');
 
@@ -516,17 +662,19 @@
                 addBtn.classList.remove('hidden');
                 statsSec.classList.remove('hidden');
                 loginIcon.textContent = 'logout';
+                loginIconMob.textContent = 'logout';
                 loginText.textContent = 'ออกจากระบบ';
                 document.getElementById('loginBtn').classList.replace('text-blue-600', 'text-red-500');
-                updateChart(); 
+                updateCharts(); 
             } else {
                 addBtn.classList.add('hidden');
                 statsSec.classList.add('hidden');
                 loginIcon.textContent = 'login';
+                loginIconMob.textContent = 'login';
                 loginText.textContent = 'ผู้ดูแลระบบ';
                 document.getElementById('loginBtn').classList.replace('text-red-500', 'text-blue-600');
             }
-            renderCards(document.getElementById('searchInput').value);
+            applyFiltersAndRender();
         }
 
         function openAddModal() {
@@ -547,7 +695,6 @@
 
             document.getElementById('formId').value = prompt.id;
             document.getElementById('formTitle').value = prompt.title;
-            // ถ้าข้อมูลเก่าไม่มีหมวดหมู่ ให้ใช้ 'ทั่วไป'
             document.getElementById('formCategory').value = prompt.category || 'ทั่วไป';
             document.getElementById('formDesc').value = prompt.description;
             document.getElementById('formPrompt').value = prompt.promptText;
@@ -557,9 +704,7 @@
             document.getElementById('formModal').classList.remove('hidden');
         }
 
-        function closeFormModal() {
-            document.getElementById('formModal').classList.add('hidden');
-        }
+        function closeFormModal() { document.getElementById('formModal').classList.add('hidden'); }
 
         function handleFormSubmit(e) {
             e.preventDefault();
@@ -571,21 +716,15 @@
                 description: document.getElementById('formDesc').value,
                 promptText: document.getElementById('formPrompt').value
             };
-
             closeFormModal();
             sendDataToGAS(id ? 'edit' : 'add', data);
         }
 
         function deletePrompt(id) {
             Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: "คุณจะไม่สามารถกู้คืนข้อมูลนี้ได้!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#9ca3af',
-                confirmButtonText: 'ใช่, ลบเลย!',
-                cancelButtonText: 'ยกเลิก'
+                title: 'ยืนยันการลบ?', text: "คุณจะไม่สามารถกู้คืนข้อมูลนี้ได้!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'ใช่, ลบเลย!'
             }).then((result) => {
                 if (result.isConfirmed) sendDataToGAS('delete', { id: id });
             });
@@ -594,44 +733,60 @@
         function showLoading() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
         function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
 
-        function updateChart() {
+        function updateCharts() {
             if (!isAdmin) return;
-            const ctx = document.getElementById('promptChart');
             
-            // 1. นับจำนวน Prompt ตามหมวดหมู่ (ข้อมูลจริง)
+            // --- Chart 1: สัดส่วนหมวดหมู่ ---
+            const ctxCategory = document.getElementById('promptChart');
             const categoryCounts = {};
             promptsData.forEach(p => {
-                const cat = p.category || 'ทั่วไป'; // กรณีข้อมูลเก่าไม่มีหมวดหมู่ ให้ตกอยู่หมวด ทั่วไป
+                const cat = p.category || 'ทั่วไป';
                 categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
             });
 
-            const labels = Object.keys(categoryCounts);
-            const dataValues = Object.values(categoryCounts);
-            
-            // สีสำหรับกราฟ 6 หมวด
+            const catLabels = Object.keys(categoryCounts);
+            const catData = Object.values(categoryCounts);
             const colors = ['#3b82f6', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
             
-            if (myChart) myChart.destroy();
-
-            // หากยังไม่มีข้อมูลเลย ให้กราฟว่าง
-            const hasData = labels.length > 0;
-
-            myChart = new Chart(ctx, {
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctxCategory, {
                 type: 'doughnut',
                 data: {
-                    labels: hasData ? labels : ['ไม่มีข้อมูล'],
+                    labels: catLabels.length ? catLabels : ['ไม่มีข้อมูล'],
                     datasets: [{
-                        data: hasData ? dataValues : [1],
-                        backgroundColor: hasData ? colors.slice(0, labels.length) : ['#e2e8f0'],
-                        borderWidth: 0
+                        data: catLabels.length ? catData : [1],
+                        backgroundColor: catLabels.length ? colors : ['#e2e8f0'], borderWidth: 0
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'right' } 
-                    }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            // --- Chart 2: Top 5 ยอดนิยม (ยอด Copies) ---
+            const ctxTop = document.getElementById('topPromptChart');
+            
+            // คัดลอก อาเรย์ เรียงลำดับจากยอด Copy มากไปน้อย และตัดมา 5 อันดับ
+            const top5 = [...promptsData].sort((a, b) => b.copies - a.copies).slice(0, 5);
+            
+            // ถ้าตารางว่างเปล่า หรือยังไม่มียอด Copy เลยให้แสดงข้อมูลจำลองเพื่อความสวยงาม
+            const topLabels = top5.length && top5[0].copies > 0 ? top5.map(p => p.title.length > 20 ? p.title.substring(0,20)+'...' : p.title) : ['ยังไม่มียอดคัดลอก'];
+            const topData = top5.length && top5[0].copies > 0 ? top5.map(p => p.copies) : [0];
+
+            if (topChart) topChart.destroy();
+            topChart = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: topLabels,
+                    datasets: [{
+                        label: 'จำนวนครั้งที่ถูกคัดลอก',
+                        data: topData,
+                        backgroundColor: '#10b981', borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    indexAxis: 'y', // เปลี่ยนเป็นกราฟแนวนอน
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
         }
