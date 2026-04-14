@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharePrompt หลักสูตรที่ 11 AI ช่วยทำวิจัยทางการศึกษา</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- MathJax for Math Symbols -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 50%, #dbeafe 100%);
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .prompt-text-container {
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .prompt-text-container::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+        }
+
+        /* SweetAlert Customization */
+        .swal2-popup {
+            font-family: 'Prompt', sans-serif !important;
+            border-radius: 1rem !important;
+        }
+        .swal2-confirm {
+            background-color: #3b82f6 !important;
+        }
+        
+        /* Hide scrollbar for cleaner look in prompt view */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800 relative">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+        <p class="text-blue-600 font-medium animate-pulse text-lg">กำลังโหลดข้อมูลระบบ...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-blue-500 to-cyan-400 text-white p-2 rounded-xl shadow-md">
+                    <span class="material-icons">auto_awesome</span>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
+                        SharePrompt
+                    </h1>
+                    <p class="text-xs md:text-sm text-gray-500 font-medium">หลักสูตรที่ 11 AI ช่วยทำวิจัยทางการศึกษา</p>
+                </div>
+            </div>
+
+            <div class="flex-1 w-full md:max-w-md relative">
+                <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อ หรือรายละเอียด..." 
+                       class="w-full pl-10 pr-4 py-2.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-inner bg-gray-50">
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="addPromptBtn" onclick="openAddModal()" class="hidden bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white px-4 py-2 rounded-full font-medium transition-transform transform hover:scale-105 shadow-md flex items-center gap-1">
+                    <span class="material-icons text-sm">add</span> เพิ่ม Prompt
+                </button>
+                <button id="loginBtn" onclick="handleLoginFlow()" class="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-4 py-2 rounded-full font-medium transition-colors shadow-sm flex items-center gap-1">
+                    <span class="material-icons text-sm" id="loginIcon">login</span>
+                    <span id="loginText">ผู้ดูแลระบบ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Optional: Chart Section (Visible to Admin or default hidden) -->
+        <div id="statsSection" class="hidden mb-8 glass-card rounded-2xl p-6 shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                <span class="material-icons text-blue-500">bar_chart</span> สถิติการใช้งาน
+            </h2>
+            <div class="h-48 w-full max-w-md mx-auto">
+                <canvas id="promptChart"></canvas>
+            </div>
+        </div>
+
+        <div id="noDataMessage" class="hidden text-center py-20">
+            <span class="material-icons text-6xl text-gray-300 mb-4 block">search_off</span>
+            <h3 class="text-xl font-medium text-gray-500">ไม่พบ Prompt ที่ค้นหา</h3>
+            <p class="text-gray-400 mt-2">ลองใช้คำค้นหาอื่นดูอีกครั้ง</p>
+        </div>
+
+        <div id="promptGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be dynamically injected here -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/80 backdrop-blur-sm border-t border-blue-100 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-gray-500">
+            <p>© 2026 ระบบคลังข้อความคำสั่งอัจฉริยะ</p>
+            <p class="font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full flex items-center gap-2">
+                <span class="material-icons text-sm">code</span> พัฒนาโดย ดร.พิญญารัศม์ สิงหะ
+            </p>
+        </div>
+    </footer>
+
+    <!-- Form Modal (Add/Edit) -->
+    <div id="formModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden transform transition-all">
+            <div class="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 flex justify-between items-center">
+                <h3 id="modalTitle" class="text-white text-lg font-semibold flex items-center gap-2">
+                    <span class="material-icons" id="modalIcon">add_circle</span> <span id="modalTitleText">เพิ่ม Prompt ใหม่</span>
+                </h3>
+                <button onclick="closeFormModal()" class="text-white/80 hover:text-white transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="promptForm" class="p-6 space-y-4" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="formId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หัวข้อ (Title)</label>
+                    <input type="text" id="formTitle" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด (Description)</label>
+                    <textarea id="formDesc" rows="2" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความ Prompt</label>
+                    <textarea id="formPrompt" rows="5" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent font-mono text-sm bg-gray-50"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">รองรับสัญลักษณ์คณิตศาสตร์ เช่น $E=mc^2$ หรือ \(\frac{1}{2}\)</p>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t">
+                    <button type="button" onclick="closeFormModal()" class="px-5 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-colors">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-sm">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ตั้งค่า Google Apps Script Web App URL ที่นี่
+        // ==========================================
+        // **สำคัญ**: คุณต้องนำโค้ด .gs ด้านล่างไป Deploy เป็น Web App
+        // และนำ URL ที่ได้มาใส่แทนที่ลิงก์ด้านล่างนี้
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzY9Ya7tfHctThftYqACL3AknZ35177VqG7A7trUi9Pu6F2pBB-J9TGSerZbAe1yicP/exec'; 
+        
+        // สถานะของระบบ
+        let promptsData = [];
+        let isAdmin = false;
+        let myChart = null;
+
+        // ข้อมูลตัวอย่างสำหรับแสดงผลทันที (กรณีเชื่อมต่อ Sheet ไม่ได้หรือไม่ทัน)
+        const sampleData = [
+            { id: '1', title: 'ออกแบบสอบถามงานวิจัย', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026' },
+            { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026' },
+            { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026' }
+        ];
+
+        // เริ่มต้นระบบ
+        document.addEventListener('DOMContentLoaded', () => {
+            // ระบบค้นหา
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderCards(e.target.value);
+            });
+
+            // ดึงข้อมูล
+            fetchData();
+        });
+
+        // ==========================================
+        // การเชื่อมต่อฐานข้อมูล (Fetch API)
+        // ==========================================
+        
+        async function fetchData() {
+            if (GAS_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+                console.warn('ยังไม่ได้ตั้งค่า GAS URL ใช้ข้อมูลตัวอย่างแทน');
+                promptsData = sampleData;
+                renderCards();
+                updateChart();
+                return;
+            }
+
+            showLoading();
+            try {
+                const response = await fetch(GAS_WEB_APP_URL + '?action=read');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // เรียงข้อมูลล่าสุดขึ้นก่อน (สมมติว่าเพิ่มล่างสุด)
+                    promptsData = result.data.reverse(); 
+                } else {
+                    throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถดึงข้อมูลจาก Sheet ได้',
+                    text: 'กำลังแสดงข้อมูลตัวอย่าง กรุณาตรวจสอบ Web App URL',
+                    confirmButtonText: 'ตกลง'
+                });
+                promptsData = sampleData;
+            } finally {
+                hideLoading();
+                renderCards();
+                updateChart();
+            }
+        }
+
+        async function sendDataToGAS(action, dataObj = {}) {
+            showLoading();
+            try {
+                // ใช้ FormData เพื่อหลีกเลี่ยงปัญหา CORS Preflight Options request
+                const formData = new URLSearchParams();
+                formData.append('action', action);
+                
+                if (action === 'delete') {
+                    formData.append('id', dataObj.id);
+                } else {
+                    formData.append('data', JSON.stringify(dataObj));
+                }
+
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    await fetchData(); // รีเฟรชข้อมูลใหม่
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error(result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
+                }
+
+            } catch (error) {
+                console.error('Error sending data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่'
+                });
+                hideLoading(); // เผื่อกรณี error ไม่ได้เข้า finally ของ fetchData
+            }
+        }
+
+
+        // ==========================================
+        // การแสดงผล (UI Rendering)
+        // ==========================================
+
+        function renderCards(filterText = '') {
+            const grid = document.getElementById('promptGrid');
+            const noData = document.getElementById('noDataMessage');
+            grid.innerHTML = '';
+            
+            const lowerFilter = filterText.toLowerCase();
+            const filteredData = promptsData.filter(p => 
+                p.title.toLowerCase().includes(lowerFilter) || 
+                p.description.toLowerCase().includes(lowerFilter)
+            );
+
+            if (filteredData.length === 0) {
+                noData.classList.remove('hidden');
+            } else {
+                noData.classList.add('hidden');
+            }
+
+            filteredData.forEach(prompt => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative group';
+                
+                // Admin Actions Dropdown/Buttons
+                let adminControls = '';
+                if (isAdmin) {
+                    adminControls = `
+                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                            <button onclick="event.stopPropagation(); openEditModal('${prompt.id}')" class="bg-amber-100 text-amber-600 hover:bg-amber-200 p-1.5 rounded-lg shadow-sm" title="แก้ไข">
+                                <span class="material-icons text-sm">edit</span>
+                            </button>
+                            <button onclick="event.stopPropagation(); deletePrompt('${prompt.id}')" class="bg-red-100 text-red-600 hover:bg-red-200 p-1.5 rounded-lg shadow-sm" title="ลบ">
+                                <span class="material-icons text-sm">delete</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    ${adminControls}
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                            <span class="material-icons">chat</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 line-clamp-1 pr-12">${prompt.title}</h2>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-3 flex items-center gap-1">
+                        <span class="material-icons" style="font-size: 14px;">calendar_today</span> ${prompt.date || '-'}
+                    </p>
+                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">${prompt.description}</p>
+                    
+                    <div class="bg-gray-50 border border-gray-100 rounded-lg p-3 mb-4 flex-grow prompt-text-container">
+                        <p class="text-sm font-mono text-gray-500 whitespace-pre-wrap">${prompt.promptText}</p>
+                    </div>
+
+                    <button onclick="viewPrompt('${prompt.id}')" class="w-full mt-auto bg-white border-2 border-blue-100 hover:border-blue-400 hover:bg-blue-50 text-blue-600 font-medium py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                        <span class="material-icons text-[18px]">visibility</span> ดูรายละเอียด / คัดลอก
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Trigger MathJax re-render for new content
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // ==========================================
+        // Modal & Interactions
+        // ==========================================
+
+        function viewPrompt(id) {
+            const prompt = promptsData.find(p => p.id === id);
+            if (!prompt) return;
+
+            Swal.fire({
+                title: `<span class="text-2xl font-bold text-gray-800">${prompt.title}</span>`,
+                html: `
+                    <div class="text-left mt-2 space-y-4">
+                        <p class="text-gray-600 text-sm">${prompt.description}</p>
+                        <div class="bg-gray-800 rounded-xl p-4 mt-4 relative">
+                            <pre class="custom-scrollbar text-green-400 font-mono text-sm whitespace-pre-wrap text-left max-h-60 overflow-y-auto" id="promptTextToCopy">${prompt.promptText}</pre>
+                        </div>
+                    </div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: true,
+                confirmButtonText: '<span class="material-icons align-middle text-[18px] mr-1">content_copy</span> คัดลอก Prompt',
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonText: 'ปิด',
+                width: '600px',
+                didOpen: () => {
+                    // รัน MathJax ใน Modal
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([Swal.getHtmlContainer()]);
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    copyToClipboard(prompt.promptText);
+                }
+            });
+        }
+
+        function copyToClipboard(text) {
+            // ใช้เทคนิคเก่าร่วมกับ navigator เผื่อกรณีไม่ได้รันบน https บริบทปลอดภัย
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showCopySuccess());
+            } else {
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopySuccess();
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                textArea.remove();
+            }
+        }
+
+        function showCopySuccess() {
+            Swal.fire({
+                icon: 'success',
+                title: 'คัดลอกสำเร็จ!',
+                text: 'คุณสามารถนำไปวางใน AI ได้เลย',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        // ==========================================
+        // ระบบจัดการแอดมิน (Admin & CRUD)
+        // ==========================================
+
+        function handleLoginFlow() {
+            if (isAdmin) {
+                // Logout
+                Swal.fire({
+                    title: 'ออกจากระบบ?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'ใช่, ออกจากระบบ',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isAdmin = false;
+                        updateAdminUI();
+                        Swal.fire({ icon: 'success', title: 'ออกจากระบบแล้ว', timer: 1500, showConfirmButton: false });
+                    }
+                });
+            } else {
+                // Login
+                Swal.fire({
+                    title: 'เข้าสู่ระบบผู้ดูแล',
+                    html: `
+                        <input id="swal-input1" class="swal2-input" placeholder="Username" autocomplete="off">
+                        <input id="swal-input2" class="swal2-input" type="password" placeholder="Password">
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'เข้าสู่ระบบ',
+                    cancelButtonText: 'ยกเลิก',
+                    preConfirm: () => {
+                        return {
+                            user: document.getElementById('swal-input1').value,
+                            pass: document.getElementById('swal-input2').value
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // ** ตามโจทย์: Username: pinyarat , Password: 1234edkku **
+                        if (result.value.user === 'pinyarat' && result.value.pass === '1234edkku') {
+                            isAdmin = true;
+                            updateAdminUI();
+                            Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ', text: 'เข้าสู่ระบบสำเร็จ', timer: 1500, showConfirmButton: false });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ถูกต้อง', text: 'Username หรือ Password ผิดพลาด' });
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateAdminUI() {
+            const addBtn = document.getElementById('addPromptBtn');
+            const loginIcon = document.getElementById('loginIcon');
+            const loginText = document.getElementById('loginText');
+            const statsSec = document.getElementById('statsSection');
+
+            if (isAdmin) {
+                addBtn.classList.remove('hidden');
+                statsSec.classList.remove('hidden'); // โชว์กราฟเมื่อเป็นแอดมิน
+                loginIcon.textContent = 'logout';
+                loginText.textContent = 'ออกจากระบบ';
+                document.getElementById('loginBtn').classList.replace('text-blue-600', 'text-red-500');
+                updateChart(); // วาดกราฟ
+            } else {
+                addBtn.classList.add('hidden');
+                statsSec.classList.add('hidden');
+                loginIcon.textContent = 'login';
+                loginText.textContent = 'ผู้ดูแลระบบ';
+                document.getElementById('loginBtn').classList.replace('text-red-500', 'text-blue-600');
+            }
+            // รีเฟรชหน้าจอเพื่อแสดง/ซ่อนปุ่มลบ,แก้ไขในการ์ด
+            renderCards(document.getElementById('searchInput').value);
+        }
+
+        // === Form Handling ===
+        function openAddModal() {
+            document.getElementById('formId').value = '';
+            document.getElementById('formTitle').value = '';
+            document.getElementById('formDesc').value = '';
+            document.getElementById('formPrompt').value = '';
+            
+            document.getElementById('modalTitleText').textContent = 'เพิ่ม Prompt ใหม่';
+            document.getElementById('modalIcon').textContent = 'add_circle';
+            document.getElementById('formModal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const prompt = promptsData.find(p => p.id === id);
+            if (!prompt) return;
+
+            document.getElementById('formId').value = prompt.id;
+            document.getElementById('formTitle').value = prompt.title;
+            document.getElementById('formDesc').value = prompt.description;
+            document.getElementById('formPrompt').value = prompt.promptText;
+
+            document.getElementById('modalTitleText').textContent = 'แก้ไข Prompt';
+            document.getElementById('modalIcon').textContent = 'edit';
+            document.getElementById('formModal').classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('formModal').classList.add('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('formId').value;
+            const data = {
+                id: id || Date.now().toString(), // สร้าง ID ชั่วคราวถ้ารอจากเซิร์ฟเวอร์
+                title: document.getElementById('formTitle').value,
+                description: document.getElementById('formDesc').value,
+                promptText: document.getElementById('formPrompt').value
+            };
+
+            closeFormModal();
+            
+            if (GAS_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+                // โหมดจำลองข้อมูล
+                if (id) {
+                    const index = promptsData.findIndex(p => p.id === id);
+                    if(index > -1) promptsData[index] = {...promptsData[index], ...data, date: new Date().toLocaleDateString('th-TH')};
+                } else {
+                    promptsData.unshift({...data, date: new Date().toLocaleDateString('th-TH')});
+                }
+                renderCards();
+                updateChart();
+                Swal.fire({ icon: 'success', title: 'จำลองการบันทึกสำเร็จ', showConfirmButton: false, timer: 1500 });
+            } else {
+                // ส่งข้อมูลจริง
+                const action = id ? 'edit' : 'add';
+                sendDataToGAS(action, data);
+            }
+        }
+
+        function deletePrompt(id) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณจะไม่สามารถกู้คืนข้อมูลนี้ได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (GAS_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+                        // โหมดจำลอง
+                        promptsData = promptsData.filter(p => p.id !== id);
+                        renderCards();
+                        updateChart();
+                        Swal.fire('ลบแล้ว!', 'ข้อมูลถูกจำลองการลบ.', 'success');
+                    } else {
+                        // ส่งข้อมูลจริง
+                        sendDataToGAS('delete', { id: id });
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // Utils
+        // ==========================================
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Chart.js - กราฟสถิติ (แสดงเฉพาะแอดมิน)
+        function updateChart() {
+            if (!isAdmin) return;
+            const ctx = document.getElementById('promptChart');
+            
+            // จำลองสถิติจากจำนวน Prompt แบ่งตามเดือน (สมมติ)
+            const count = promptsData.length;
+            
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['หมวดวิจัย', 'หมวดออกแบบ', 'หมวดทั่วไป'],
+                    datasets: [{
+                        data: [Math.ceil(count*0.5), Math.ceil(count*0.3), Math.floor(count*0.2)],
+                        backgroundColor: ['#3b82f6', '#14b8a6', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
