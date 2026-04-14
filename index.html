@@ -134,9 +134,9 @@
         <!-- Optional: Chart Section (Visible to Admin or default hidden) -->
         <div id="statsSection" class="hidden mb-8 glass-card rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
-                <span class="material-icons text-blue-500">bar_chart</span> สถิติการใช้งาน
+                <span class="material-icons text-blue-500">pie_chart</span> สัดส่วน Prompt ตามหมวดหมู่งานวิจัย
             </h2>
-            <div class="h-48 w-full max-w-md mx-auto">
+            <div class="h-48 w-full max-w-md mx-auto relative">
                 <canvas id="promptChart"></canvas>
             </div>
         </div>
@@ -180,6 +180,17 @@
                     <input type="text" id="formTitle" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่ (Category)</label>
+                    <select id="formCategory" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white">
+                        <option value="การหาหัวข้อและโครงร่างวิจัย">การหาหัวข้อและโครงร่างวิจัย</option>
+                        <option value="การทบทวนวรรณกรรม">การทบทวนวรรณกรรม</option>
+                        <option value="การสร้างเครื่องมือและแบบสอบถาม">การสร้างเครื่องมือและแบบสอบถาม</option>
+                        <option value="การวิเคราะห์ข้อมูลและสถิติ">การวิเคราะห์ข้อมูลและสถิติ</option>
+                        <option value="การเขียนรายงานและสรุปผล">การเขียนรายงานและสรุปผล</option>
+                        <option value="ทั่วไป">ทั่วไป</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด (Description)</label>
                     <textarea id="formDesc" rows="2" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent"></textarea>
                 </div>
@@ -200,7 +211,7 @@
         // ==========================================
         // ตั้งค่า Google Apps Script Web App URL ที่นี่
         // ==========================================
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6Ze8v2ZtdoBPdTvtcxdzu7SZm8iVb4noyT-QbwU16iMFY7plzSWPijJwffNTCLbMu/exec'; 
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw90LYuc60qIVBLz-qnwh9j4pKKY82AcHHns_yQEdCUs9jiJtfM852eyCYpR9l8agn2/exec'; 
         
         // สถานะของระบบ
         let promptsData = [];
@@ -208,9 +219,9 @@
         let myChart = null;
 
         const sampleData = [
-            { id: '1', title: 'ออกแบบสอบถามงานวิจัย', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026' },
-            { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026' },
-            { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026' }
+            { id: '1', title: 'ออกแบบสอบถามงานวิจัย', category: 'การสร้างเครื่องมือและแบบสอบถาม', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026' },
+            { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', category: 'การทบทวนวรรณกรรม', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026' },
+            { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', category: 'การวิเคราะห์ข้อมูลและสถิติ', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026' }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -311,7 +322,8 @@
             const lowerFilter = filterText.toLowerCase();
             const filteredData = promptsData.filter(p => 
                 p.title.toLowerCase().includes(lowerFilter) || 
-                p.description.toLowerCase().includes(lowerFilter)
+                p.description.toLowerCase().includes(lowerFilter) ||
+                (p.category && p.category.toLowerCase().includes(lowerFilter)) // ค้นหาจากหมวดหมู่ได้ด้วย
             );
 
             if (filteredData.length === 0) {
@@ -338,17 +350,24 @@
                     `;
                 }
 
+                const catBadge = prompt.category ? `<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[11px] font-medium truncate max-w-full">${prompt.category}</span>` : '';
+
                 card.innerHTML = `
                     ${adminControls}
                     <div class="flex items-center gap-3 mb-3">
-                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                        <div class="bg-blue-100 text-blue-600 p-2 rounded-lg flex-shrink-0">
                             <span class="material-icons">chat</span>
                         </div>
                         <h2 class="text-xl font-bold text-gray-800 line-clamp-1 pr-12">${prompt.title}</h2>
                     </div>
-                    <p class="text-xs text-gray-400 mb-3 flex items-center gap-1">
-                        <span class="material-icons" style="font-size: 14px;">calendar_today</span> ${prompt.date || '-'}
-                    </p>
+                    
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                        ${catBadge}
+                        <p class="text-xs text-gray-400 flex items-center gap-1">
+                            <span class="material-icons" style="font-size: 14px;">calendar_today</span> ${prompt.date || '-'}
+                        </p>
+                    </div>
+
                     <p class="text-sm text-gray-600 mb-4 line-clamp-2">${prompt.description}</p>
                     
                     <div class="bg-gray-50 border border-gray-100 rounded-lg p-3 mb-4 flex-grow prompt-text-container">
@@ -375,10 +394,13 @@
             const prompt = promptsData.find(p => p.id === id);
             if (!prompt) return;
 
+            const catBadge = prompt.category ? `<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-xs font-medium inline-block mb-2">${prompt.category}</span>` : '';
+
             Swal.fire({
                 title: `<span class="text-2xl font-bold text-gray-800">${prompt.title}</span>`,
                 html: `
                     <div class="text-left mt-2 space-y-4">
+                        ${catBadge}
                         <p class="text-gray-600 text-sm">${prompt.description}</p>
                         <div class="bg-gray-800 rounded-xl p-4 mt-4 relative">
                             <pre class="custom-scrollbar text-green-400 font-mono text-sm whitespace-pre-wrap text-left max-h-60 overflow-y-auto" id="promptTextToCopy">${prompt.promptText}</pre>
@@ -510,6 +532,7 @@
         function openAddModal() {
             document.getElementById('formId').value = '';
             document.getElementById('formTitle').value = '';
+            document.getElementById('formCategory').value = 'ทั่วไป';
             document.getElementById('formDesc').value = '';
             document.getElementById('formPrompt').value = '';
             
@@ -524,6 +547,8 @@
 
             document.getElementById('formId').value = prompt.id;
             document.getElementById('formTitle').value = prompt.title;
+            // ถ้าข้อมูลเก่าไม่มีหมวดหมู่ ให้ใช้ 'ทั่วไป'
+            document.getElementById('formCategory').value = prompt.category || 'ทั่วไป';
             document.getElementById('formDesc').value = prompt.description;
             document.getElementById('formPrompt').value = prompt.promptText;
 
@@ -542,6 +567,7 @@
             const data = {
                 id: id || Date.now().toString(),
                 title: document.getElementById('formTitle').value,
+                category: document.getElementById('formCategory').value,
                 description: document.getElementById('formDesc').value,
                 promptText: document.getElementById('formPrompt').value
             };
@@ -571,24 +597,41 @@
         function updateChart() {
             if (!isAdmin) return;
             const ctx = document.getElementById('promptChart');
-            const count = promptsData.length;
+            
+            // 1. นับจำนวน Prompt ตามหมวดหมู่ (ข้อมูลจริง)
+            const categoryCounts = {};
+            promptsData.forEach(p => {
+                const cat = p.category || 'ทั่วไป'; // กรณีข้อมูลเก่าไม่มีหมวดหมู่ ให้ตกอยู่หมวด ทั่วไป
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+            });
+
+            const labels = Object.keys(categoryCounts);
+            const dataValues = Object.values(categoryCounts);
+            
+            // สีสำหรับกราฟ 6 หมวด
+            const colors = ['#3b82f6', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
             
             if (myChart) myChart.destroy();
+
+            // หากยังไม่มีข้อมูลเลย ให้กราฟว่าง
+            const hasData = labels.length > 0;
 
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['หมวดวิจัย', 'หมวดออกแบบ', 'หมวดทั่วไป'],
+                    labels: hasData ? labels : ['ไม่มีข้อมูล'],
                     datasets: [{
-                        data: [Math.ceil(count*0.5), Math.ceil(count*0.3), Math.floor(count*0.2)],
-                        backgroundColor: ['#3b82f6', '#14b8a6', '#f59e0b'],
+                        data: hasData ? dataValues : [1],
+                        backgroundColor: hasData ? colors.slice(0, labels.length) : ['#e2e8f0'],
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } }
+                    plugins: { 
+                        legend: { position: 'right' } 
+                    }
                 }
             });
         }
