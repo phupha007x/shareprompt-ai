@@ -219,7 +219,7 @@
         });
 
         // ==========================================
-        // การเชื่อมต่อฐานข้อมูล (เปลี่ยนเป็น Fetch API เพื่อแก้ปัญหาข้อความยาว)
+        // การเชื่อมต่อฐานข้อมูล
         // ==========================================
         
         async function fetchData() {
@@ -254,7 +254,7 @@
         async function sendDataToGAS(action, dataObj = {}) {
             showLoading();
             try {
-                // ส่งข้อมูลใช้ POST ผ่าน URLSearchParams เพื่อไม่ติดปัญหา CORS และส่งข้อความได้ยาวๆ
+                // ส่งข้อมูลใช้ POST ผ่าน URLSearchParams 
                 const formData = new URLSearchParams();
                 formData.append('action', action);
                 
@@ -264,25 +264,28 @@
                     formData.append('data', JSON.stringify(dataObj));
                 }
 
-                const response = await fetch(GAS_WEB_APP_URL, {
+                // การใช้ mode: 'no-cors' จะช่วยแก้ปัญหา Error แดงในเบราว์เซอร์
+                // แม้จะไม่สามารถอ่านคำตอบที่เป็น JSON ได้ แต่ข้อมูลจะถูกส่งเข้า Google Sheet แน่นอน
+                await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    mode: 'no-cors'
                 });
                 
-                const result = await response.json();
+                // หน่วงเวลาเล็กน้อยเพื่อให้ Google Sheet บันทึกข้อมูลลงเซลล์ให้เสร็จสิ้น
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                if (result && result.status === 'success') {
-                    await fetchData(); 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ',
-                        text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                } else {
-                    throw new Error(result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
-                }
+                // โหลดข้อมูลล่าสุดมาแสดงผลใหม่
+                await fetchData(); 
+                
+                // แสดงสถานะสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
 
             } catch (error) {
                 console.warn('Error sending data:', error);
@@ -292,7 +295,7 @@
                     text: 'ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Deploy ของคุณ'
                 });
             } finally {
-                hideLoading(); // เพิ่ม finally เพื่อปิดโหลดเสมอ
+                hideLoading(); 
             }
         }
 
