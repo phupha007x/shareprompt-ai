@@ -200,72 +200,27 @@
         // ==========================================
         // ตั้งค่า Google Apps Script Web App URL ที่นี่
         // ==========================================
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7mG8THL9KgWEhwLC_rQ7P3pKURuriB3_TRO8a-Jgmk-KKoSfQ5AW04lyzvGNX4dw1/exec'; 
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6Ze8v2ZtdoBPdTvtcxdzu7SZm8iVb4noyT-QbwU16iMFY7plzSWPijJwffNTCLbMu/exec'; 
         
         // สถานะของระบบ
         let promptsData = [];
         let isAdmin = false;
         let myChart = null;
 
-        // ข้อมูลตัวอย่างสำหรับแสดงผลทันที (กรณีเชื่อมต่อ Sheet ไม่ได้หรือไม่ทัน)
         const sampleData = [
             { id: '1', title: 'ออกแบบสอบถามงานวิจัย', description: 'ให้ AI ช่วยร่างแบบสอบถามเพื่อเก็บข้อมูล', promptText: 'คุณคือนักวิจัยเชี่ยวชาญการออกแบบแบบสอบถาม กรุณาสร้างแบบสอบถาม 10 ข้อ สำหรับงานวิจัยเรื่อง "การใช้ AI ในห้องเรียน" โดยแบ่งเป็นตอนข้อมูลทั่วไป และระดับความคิดเห็นแบบมาตราส่วนประมาณค่า 5 ระดับ', date: '14/04/2026' },
             { id: '2', title: 'สรุปวรรณกรรมที่เกี่ยวข้อง', description: 'สรุปบทความวิชาการให้เข้าใจง่าย', promptText: 'สรุปใจความสำคัญของบทความวิชาการที่ฉันจะวางต่อไปนี้ โดยเน้นที่ 1. วัตถุประสงค์ 2. วิธีการดำเนินงาน 3. ผลการวิจัย และ 4. ข้อเสนอแนะ จัดรูปแบบเป็น Bullet points ให้อ่านง่าย\n\n[วางเนื้อหาบทความที่นี่]', date: '12/04/2026' },
             { id: '3', title: 'สมการคณิตศาสตร์สำหรับวิจัย', description: 'ตัวอย่างการแสดงสมการหาค่า Mean', promptText: 'อธิบายสูตรการหาค่าเฉลี่ยเลขคณิต (Mean) คือ $\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}$ พร้อมยกตัวอย่างการคำนวณจากข้อมูล 5 ค่า', date: '10/04/2026' }
         ];
 
-        // เริ่มต้นระบบ
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('searchInput').addEventListener('input', (e) => renderCards(e.target.value));
             fetchData();
         });
 
         // ==========================================
-        // การเชื่อมต่อฐานข้อมูล (เปลี่ยนเป็น JSONP แก้ปัญหา CORS)
+        // การเชื่อมต่อฐานข้อมูล (เปลี่ยนเป็น Fetch API เพื่อแก้ปัญหาข้อความยาว)
         // ==========================================
-        
-        function jsonpRequest(url, params) {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
-                let isResolved = false;
-                
-                const script = document.createElement('script');
-                
-                const cleanup = () => {
-                    if (window[callbackName]) delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                };
-
-                window[callbackName] = function(data) {
-                    isResolved = true;
-                    cleanup();
-                    resolve(data);
-                };
-
-                const queryParams = new URLSearchParams(params);
-                queryParams.append('callback', callbackName);
-                
-                // ใช้ GET request สำหรับทุก action ในรูปแบบ JSONP
-                script.src = url + (url.includes('?') ? '&' : '?') + queryParams.toString();
-                
-                script.onerror = function() {
-                    if (!isResolved) {
-                        cleanup();
-                        reject(new Error('เกิดปัญหาในการโหลดข้อมูล (CORS/Network)'));
-                    }
-                };
-                
-                // Timeout 10 วิ
-                setTimeout(() => {
-                    if (!isResolved) {
-                        cleanup();
-                        reject(new Error('เชื่อมต่อฐานข้อมูลใช้เวลานานเกินไป'));
-                    }
-                }, 10000);
-                
-                document.body.appendChild(script);
-            });
-        }
         
         async function fetchData() {
             if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
@@ -277,7 +232,9 @@
 
             showLoading();
             try {
-                const result = await jsonpRequest(GAS_WEB_APP_URL, { action: 'read' });
+                // ดึงข้อมูลใช้ GET (Fetch ธรรมดา)
+                const response = await fetch(GAS_WEB_APP_URL + '?action=read');
+                const result = await response.json();
                 
                 if (result && result.status === 'success') {
                     promptsData = result.data.reverse(); 
@@ -286,7 +243,7 @@
                 }
             } catch (error) {
                 console.warn('เปลี่ยนมาใช้ข้อมูลจำลองเนื่องจาก:', error);
-                promptsData = sampleData; // Fallback ป้องกันหน้าจอว่าง
+                promptsData = sampleData; 
             } finally {
                 hideLoading();
                 renderCards();
@@ -297,16 +254,22 @@
         async function sendDataToGAS(action, dataObj = {}) {
             showLoading();
             try {
-                const params = { action: action };
+                // ส่งข้อมูลใช้ POST ผ่าน URLSearchParams เพื่อไม่ติดปัญหา CORS และส่งข้อความได้ยาวๆ
+                const formData = new URLSearchParams();
+                formData.append('action', action);
                 
                 if (action === 'delete') {
-                    params.id = dataObj.id;
+                    formData.append('id', dataObj.id);
                 } else {
-                    params.data = JSON.stringify(dataObj);
+                    formData.append('data', JSON.stringify(dataObj));
                 }
 
-                // สั่งประมวลผลผ่าน JSONP (ต้องอัปเดต Google Apps Script ตามที่แนะนำ)
-                const result = await jsonpRequest(GAS_WEB_APP_URL, params);
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
                 
                 if (result && result.status === 'success') {
                     await fetchData(); 
@@ -328,7 +291,8 @@
                     title: 'เกิดข้อผิดพลาด',
                     text: 'ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Deploy ของคุณ'
                 });
-                hideLoading();
+            } finally {
+                hideLoading(); // เพิ่ม finally เพื่อปิดโหลดเสมอ
             }
         }
 
