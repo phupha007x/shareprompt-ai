@@ -1,0 +1,144 @@
+const SPREADSHEET_ID = "1tyUjDKJ0csZrMseYn9wrjyhSHvc0he3BSaULn24c4-M";
+const SHEET_NAME = "Sheet1";
+
+// การล็อกอินของ ผู้ดูแลระบบตามเงื่อนไขที่กำหนด
+const ADMIN_USER = "pinyarat";
+const ADMIN_PASS = "1234edkku";
+
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === "getPrompts") {
+    var data = getAllPromptsData();
+    var callback = e.parameter.callback;
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + JSON.stringify(data) + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+  
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('SharePrompt การทำวิจัยทางการศึกษา')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// ฟังก์ชันเชื่อมต่อและตรวจสอบหน้า Sheet (ปรับปรุงให้รองรับกรณีชีตว่างเปล่า 0 แถว)
+function getSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(["ID", "หัวข้อ", "รายละเอียด", "Prompt", "วันที่"]);
+  } else if (sheet.getLastRow() === 0) {
+    // ถ้ามีชื่อชีตแต่ชีตว่างเปล่า ไม่มีข้อมูลเลย ให้ใส่หัวตารางทันที
+    sheet.appendRow(["ID", "หัวข้อ", "รายละเอียด", "Prompt", "วันที่"]);
+  }
+  return sheet;
+}
+
+// ดึงข้อมูลทั้งหมด
+function getAllPromptsData() {
+  try {
+    const sheet = getSheet();
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1 || (data.length === 1 && data[0][0] === "ID")) return [];
+    
+    const headers = data[0];
+    const rows = data.slice(1);
+    
+    return rows.map(row => {
+      let obj = {};
+      headers.forEach((header, index) => {
+        if (header === "วันที่" && row[index] instanceof Date) {
+          obj[header] = Utilities.formatDate(row[index], Session.getScriptTimeZone(), "yyyy-MM-dd");
+        } else {
+          obj[header] = row[index];
+        }
+      });
+      return obj;
+    });
+  } catch (error) {
+    return { error: error.toString() };
+  }
+}
+
+// ตรวจสอบการเข้าสู่ระบบฝั่ง Server
+function loginAdmin(username, password) {
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    return { success: true, token: Utilities.base64Encode(ADMIN_USER + ":" + ADMIN_PASS) };
+  }
+  return { success: false, message: "Username หรือ Password ไม่ถูกต้อง" };
+}
+
+// เพิ่ม Prompt ใหม่ (ปรับปรุงแก้ไขบั๊กตารางว่างช่วงเริ่มต้นตัวเลข ID)
+function addPrompt(promptData) {
+  try {
+    const sheet = getSheet();
+    const lastRow = sheet.getLastRow();
+    let nextId = 1;
+    
+    // ตรวจสอบความปลอดภัยของแถวขอบเขตข้อมูลเพื่อคำนวณ ID ถัดไป
+    if (lastRow > 1) {
+      const lastIdVal = sheet.getRange(lastRow, 1).getValue();
+      nextId = isNaN(parseInt(lastIdVal)) ? 1 : parseInt(lastIdVal) + 1;
+    }
+    
+    const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+    
+    sheet.appendRow([
+      nextId,
+      promptData.title,
+      promptData.description,
+      promptData.prompt,
+      today
+    ]);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// แก้ไข Prompt
+function updatePrompt(promptData) {
+  try {
+    const sheet = getSheet();
+    const data = sheet.getDataRange().getValues();
+    const idToFind = parseInt(promptData.id);
+    
+    for (let i = 1; i < data.length; i++) {
+      if (parseInt(data[i][0]) === idToFind) {
+        sheet.getRange(i + 1, 2, 1, 3).setValues([[
+          promptData.title,
+          promptData.description,
+          promptData.prompt
+        ]]);
+        return { success: true };
+      }
+    }
+    return { success: false, error: "ไม่พบข้อมูลที่ต้องการแก้ไข" };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ลบ Prompt
+function deletePrompt(id) {
+  try {
+    const sheet = getSheet();
+    const data = sheet.getDataRange().getValues();
+    const idToFind = parseInt(id);
+    
+    for (let i = 1; i < data.length; i++) {
+      if (parseInt(data[i][0]) === idToFind) {
+        sheet.deleteRow(i + 1);
+        return { success: true };
+      }
+    }
+    return { success: false, error: "ไม่พบข้อมูลที่ต้องการลบ" };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
